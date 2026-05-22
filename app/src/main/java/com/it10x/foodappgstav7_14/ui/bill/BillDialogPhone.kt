@@ -29,6 +29,8 @@ fun BillDialogPhone(
     sessionId: String?,
     tableId: String?,
     orderType: String,
+    localeTag: String,
+    currencyCode: String,
     selectedTableName: String
 ) {
     if (!showBill || sessionId == null) return
@@ -92,7 +94,9 @@ fun BillDialogPhone(
                         )
 
                         onDismiss()
-                    }
+                    },
+                    currencyCode = currencyCode,
+                    localeTag = localeTag,
                 )
 
                 OutlinedTextField(

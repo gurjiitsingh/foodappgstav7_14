@@ -10,13 +10,22 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.it10x.foodappgstav7_14.ui.cart.CartViewModel
-
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 @Composable
-fun OrderSummaryCompact(cartViewModel: CartViewModel) {
+fun OrderSummaryCompact(
+    cartViewModel: CartViewModel,
+    currencyCode: String,
+    localeTag: String
+) {
     val cartItems by cartViewModel.cart.collectAsState(initial = emptyList())
     val itemCount = cartItems.sumOf { it.quantity }
-    val grandTotal = com.it10x.foodappgstav7_14.data.pos.viewmodel.OrderCalculator.grandTotal(cartItems)
+    val itemSubtotalTotal = com.it10x.foodappgstav7_14.data.pos.viewmodel.OrderCalculator.subtotal(cartItems)
 
+    val formattedItemSubtotalTotal = MoneyFormatter.format(
+        amount = itemSubtotalTotal,
+        currencyCode = currencyCode,
+        localeTag = localeTag
+    )
     Column(
         modifier = Modifier.padding(horizontal = 6.dp),
         horizontalAlignment = Alignment.Start
@@ -29,13 +38,15 @@ fun OrderSummaryCompact(cartViewModel: CartViewModel) {
             )
         }
         Text(
-            text = "₹${"%.2f".format(grandTotal)}",
+            text = formattedItemSubtotalTotal,
             style = MaterialTheme.typography.titleMedium.copy(
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             ),
             color = MaterialTheme.colorScheme.primary
         )
+
+
     }
 }
 

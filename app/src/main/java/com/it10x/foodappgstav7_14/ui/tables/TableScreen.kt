@@ -54,15 +54,13 @@ import com.it10x.foodappgstav7_14.ui.bill.BillDialogPhone
 import com.it10x.foodappgstav7_14.ui.cart.CartUiEvent
 import com.it10x.foodappgstav7_14.ui.kitchen.KitchenViewModelFactory
 
-import androidx.compose.ui.graphics.Shape
 import com.it10x.foodappgstav7_14.data.pos.viewmodel.ProductsLocalViewModel
 import com.it10x.foodappgstav7_14.data.pos.viewmodel.ProductsLocalViewModelFactory
-import com.it10x.foodappgstav7_14.ui.components.PosTouchKeyboardCompact
 import com.it10x.foodappgstav7_14.ui.pos.CategorySelectorDialog
 import com.it10x.foodappgstav7_14.ui.pos.PosSessionViewModel
-import com.it10x.foodappgstav7_14.ui.pos.ProductList
 import com.it10x.foodappgstav7_14.ui.pos.RightPanel
 import com.it10x.foodappgstav7_14.ui.pos.TableSelectorGrid
+import com.it10x.foodappgstav7_14.data.print.OutletMapper
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -89,6 +87,10 @@ fun TableScreen(
     var searchQuery by rememberSaveable { mutableStateOf("") }
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
+
+    var outletSettings by remember {
+        mutableStateOf<com.it10x.foodappgstav7_14.data.pos.entities.config.OutletEntity?>(null)
+    }
 
     val configuration = LocalConfiguration.current
     val isPhone = configuration.screenWidthDp < 600
@@ -173,6 +175,15 @@ fun TableScreen(
     }
 
     LaunchedEffect(Unit) { tableVm.loadTables() }
+
+    LaunchedEffect(Unit) {
+        outletSettings = db.outletDao().getOutlet()
+    }
+
+    val outletInfo = remember(outletSettings) {
+        OutletMapper.fromEntity(outletSettings)
+    }
+
     val cartItems by cartViewModel.cart.collectAsState(initial = emptyList())
     val cartCount = cartItems.sumOf { it.quantity }
     var showCartSheet by remember { mutableStateOf(false) }
@@ -317,6 +328,7 @@ fun TableScreen(
                 onOpenBill = { showBill = true },
                 isMobile = true,
                 onClose = { showCartSheet = false },
+                outletInfo = outletInfo,
                 repository = repository
             )
         }
@@ -407,6 +419,7 @@ fun TableScreen(
                             kitchenViewModel = kitchenViewModel,
                             cartViewModel = cartViewModel,
                             onKitchenEmpty = { showKitchen = false },
+                            outletInfo = outletInfo,
                             orderType = orderType
                         )
                     }
@@ -429,6 +442,8 @@ fun TableScreen(
         sessionId = sessionId,
         tableId = tableId,
         orderType = orderType,
+            currencyCode = outletInfo.currencyCode,
+            localeTag = outletInfo.localeTag,
         selectedTableName = selectedTableName ?: ""
     )
 else{
@@ -438,6 +453,8 @@ else{
             sessionId = sessionId,
             tableId = tableId,
             orderType = orderType,
+            currencyCode = outletInfo.currencyCode,
+            localeTag = outletInfo.localeTag,
             selectedTableName = selectedTableName ?: ""
         )
     }

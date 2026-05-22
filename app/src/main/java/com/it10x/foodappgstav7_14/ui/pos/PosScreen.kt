@@ -65,7 +65,8 @@ import com.it10x.foodappgstav7_14.ui.components.TouchKeyboardPhone
 import com.it10x.foodappgstav7_14.viewmodel.PosViewModel
 import com.it10x.foodappgstav7_14.viewmodel.VirtualTableViewModel
 
-
+import com.it10x.foodappgstav7_14.data.print.OutletMapper
+import com.it10x.foodappgstav7_14.data.print.OutletInfo
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PosScreen(
@@ -216,6 +217,10 @@ fun PosScreen(
 
         showCategorySidebar =
             outletSettings?.showCategorySidebar ?: true
+    }
+
+    val outletInfo = remember(outletSettings) {
+        OutletMapper.fromEntity(outletSettings)
     }
 
     LaunchedEffect(orderType, tableId) {
@@ -659,7 +664,9 @@ fun PosScreen(
                     onProductAdded = {
                         searchQuery = ""
                        // productsViewModel.setSearchQuery("")
-                    }
+                    },
+                    currencyCode = outletInfo.currencyCode,
+                    localeTag = outletInfo.localeTag,
                 )
                 if (showCategorySelector) {
                     CategorySelectorDialog(
@@ -761,7 +768,8 @@ fun PosScreen(
                         onOpenKitchen = { showKitchen = true },
                         onOpenBill = { showBill = true },
                         isMobile = false,
-                        repository = repository
+                        repository = repository,
+                        outletInfo = outletInfo,
                     )
 
 
@@ -861,6 +869,7 @@ fun PosScreen(
                 onOpenBill = { showBill = true },
                 isMobile = true,
                 onClose = { showCartSheet = false },
+                outletInfo = outletInfo,
                 repository = repository
             )
         }
@@ -951,6 +960,7 @@ fun PosScreen(
                             kitchenViewModel = kitchenViewModel,
                             cartViewModel = cartViewModel,
                             onKitchenEmpty = { showKitchen = false },
+                            outletInfo = outletInfo,
                             orderType = orderType
                         )
                     }
@@ -973,6 +983,8 @@ fun PosScreen(
         sessionId = sessionId,
         tableId = tableId,
         orderType = orderType,
+        currencyCode = outletInfo.currencyCode,
+        localeTag = outletInfo.localeTag,
         selectedTableName = selectedTableName ?: ""
     )
 else{
@@ -982,6 +994,8 @@ else{
             sessionId = sessionId,
             tableId = tableId,
             orderType = orderType,
+            currencyCode = outletInfo.currencyCode,
+            localeTag = outletInfo.localeTag,
             selectedTableName = selectedTableName ?: ""
         )
     }

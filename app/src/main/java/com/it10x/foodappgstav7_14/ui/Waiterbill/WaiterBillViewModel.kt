@@ -198,7 +198,7 @@ class WaiterBillViewModel(
     private fun loadCurrency() {
         viewModelScope.launch {
             val outletInfo = outletRepository.getOutletInfo()
-            _currencySymbol.value = outletInfo.defaultCurrency
+            _currencySymbol.value = outletInfo.currencyCode
         }
     }
 

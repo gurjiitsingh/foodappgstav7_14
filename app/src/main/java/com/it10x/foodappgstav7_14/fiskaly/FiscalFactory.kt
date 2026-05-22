@@ -6,11 +6,11 @@ import com.it10x.foodappgstav7_14.fiskaly.SpainFiscalService
 import com.it10x.foodappgstav7_14.fiskaly.FiskalyRepository
 
 fun getFiscalService(
-    country: String,
+    countryCode: String,
     fiskalyRepository: FiskalyRepository? = null
 ): FiscalService {
 
-    return when (country) {
+    return when (countryCode) {
         "DE" -> GermanyFiscalService(fiskalyRepository!!)
         "IN" -> IndiaFiscalService()
         "ES" -> SpainFiscalService()

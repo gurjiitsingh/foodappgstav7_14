@@ -18,10 +18,15 @@ data class OutletEntity(
     val city: String,
     val state: String?,
     val zipcode: String?,
-    val country: String?,
+    val countryName: String?,
 
+
+    // ---------- COUNTRY ---------
+    val countryCode: String? = null,
+    val currencyCode: String = "INR",
+    val localeTag: String? = null,
     // ---------- TAX ----------
-    val defaultCurrency: String?,
+
     val taxType: String?,
     val gstVatNumber: String?,
 

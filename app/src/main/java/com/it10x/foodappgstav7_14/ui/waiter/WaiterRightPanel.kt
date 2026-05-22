@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.firebase.firestore.FirebaseFirestore
 import com.it10x.foodappgstav7_14.data.pos.repository.WaiterKitchenRepository
+import com.it10x.foodappgstav7_14.data.print.OutletInfo
 import com.it10x.foodappgstav7_14.ui.cart.CartRow
 import com.it10x.foodappgstav7_14.ui.cart.MiniCartRow
 
@@ -67,6 +68,7 @@ fun WaiterRightPanel(
     onOpenBill: (String) -> Unit,
     isMobile: Boolean,
     repository: POSOrdersRepository,
+    outletInfo: OutletInfo,
     onClose: (() -> Unit)? = null
 ) {
 
@@ -233,7 +235,11 @@ fun WaiterRightPanel(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // 💰 Summary (item count + grand total)
-            OrderSummaryCompact(cartViewModel)
+            OrderSummaryCompact(
+                cartViewModel = cartViewModel,
+                currencyCode = outletInfo.currencyCode,
+                localeTag = outletInfo.localeTag
+            )
 
             // 🧾 Bill Button
             Button(

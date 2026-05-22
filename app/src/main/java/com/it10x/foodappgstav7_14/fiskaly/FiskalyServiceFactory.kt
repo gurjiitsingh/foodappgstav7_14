@@ -6,8 +6,8 @@ import com.it10x.foodappgstav7_14.network.fiskaly.FiskalyClient
 
 object FiskalyServiceFactory {
 
-    fun create(context: Context, country: String): FiskalyRepository {
-        return when (country) {
+    fun create(context: Context, countryCode: String): FiskalyRepository {
+        return when (countryCode) {
 
             "DE" -> {
                 val api: FiskalyApi = FiskalyClient.api

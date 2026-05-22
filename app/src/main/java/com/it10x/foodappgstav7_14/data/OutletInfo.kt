@@ -14,10 +14,17 @@ data class OutletInfo(
     val city: String? = null,
     val state: String? = null,
     val zipcode: String? = null,
-    val country: String? = null,
+  
 
     // COUNTRY
     val countryCode: String? = null,
+
+    val currencyCode: String = "INR",
+    val localeTag: String = "en-IN",
+    val countryName: String? = null,
+
+
+
 
     // TAX
     val taxType: String? = null,
@@ -47,8 +54,6 @@ data class OutletInfo(
     // STATUS
     val isActive: Boolean = true,
 
-    // CURRENCY
-    val defaultCurrency: String = "₹",
 
     // METADATA
     val createdAt: Any? = null,

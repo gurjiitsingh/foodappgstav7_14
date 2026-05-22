@@ -19,12 +19,15 @@ import com.it10x.foodappgstav7_14.data.pos.entities.PosOrderMasterEntity
 import com.it10x.foodappgstav7_14.data.pos.viewmodel.POSOrdersViewModel
 import java.text.SimpleDateFormat
 import java.util.*
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocalOrdersScreen(
     viewModel: POSOrdersViewModel,
-    navController: NavController
-) {
+    navController: NavController,
+    currencyCode: String,
+    localeTag: String
+){
     val orders by viewModel.orders.collectAsState()
     val loading by viewModel.loading.collectAsState()
     var selectedDate by remember { mutableStateOf<Long?>(null) }
@@ -113,6 +116,8 @@ fun LocalOrdersScreen(
                     items(orders, key = { it.id }) { order ->
                         LocalPosOrderTableRow(
                             order = order,
+                            currencyCode = currencyCode,
+                            localeTag = localeTag,
                             onOrderClick = {
                                 navController.navigate("local_order_detail/${order.id}")
                             },
@@ -217,133 +222,12 @@ private fun RowScope.HeaderCell(text: String, weight: Float) {
 }
 
 
-//@Composable
-//fun LocalPosOrderTableRow(
-//    order: PosOrderMasterEntity,
-//    onOrderClick: () -> Unit,
-//    onPrintBill: () -> Unit,
-//    onPrintKitchen: () -> Unit
-//) {
-//    var showPrintOptions by remember { mutableStateOf(false) }
-//
-//    Row(
-//        modifier = Modifier
-//            .fillMaxWidth()
-//            .clickable { onOrderClick() }
-//            .padding(vertical = 8.dp, horizontal = 8.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//
-//        Text("#${order.srno}", modifier = Modifier.weight(0.14f))
-//
-//        val shortType = when (order.orderType.lowercase()) {
-//            "delivery" -> "DV"
-//            "takeaway" -> "TA"
-//            "dine_in", "dine-in", "dinein" -> order.tableNo ?: "DINE"
-//            else -> order.orderType.take(2).uppercase()
-//        }
-//
-//        Text(shortType, modifier = Modifier.weight(0.18f))
-//        Text(
-//            text = "₹${"%.2f".format(order.grandTotal)}",
-//            modifier = Modifier.weight(0.16f),
-//            fontWeight = FontWeight.Medium
-//        )
-//
-//        Text(
-//            "${order.paymentType} • ${order.paymentStatus}",
-//            modifier = Modifier.weight(0.18f),
-//            style = MaterialTheme.typography.bodySmall
-//        )
-//
-//        Text(
-//            order.orderStatus,
-//            modifier = Modifier.weight(0.18f),
-//            color = when (order.orderStatus.uppercase()) {
-//                "NEW" -> Color(0xFF1976D2)
-//                "ACCEPTED" -> Color(0xFF388E3C)
-//                "COMPLETED" -> Color(0xFF2E7D32)
-//                "CANCELLED" -> Color(0xFFD32F2F)
-//                else -> Color.DarkGray
-//            }
-//        )
-//
-//        Text(
-//            formatLocalTime(order.createdAt),
-//            modifier = Modifier.weight(0.12f),
-//            style = MaterialTheme.typography.bodySmall
-//        )
-//
-//        IconButton(
-//            onClick = { showPrintOptions = true },
-//            modifier = Modifier.weight(0.04f)
-//        ) {
-//            Icon(
-//                imageVector = Icons.Filled.Print,
-//                contentDescription = "Print Order",
-//                tint = MaterialTheme.colorScheme.primary
-//            )
-//        }
-//    }
-//
-//    Divider()
-//
-//    // ------------------------------------------
-//    // 🧾 PRINT OPTIONS DIALOG
-//    // ------------------------------------------
-//    if (showPrintOptions) {
-//        AlertDialog(
-//            onDismissRequest = { showPrintOptions = false },
-//            title = { Text("Select Print Type") },
-//            text = { Text("Choose what you want to print for this order:") },
-//            confirmButton = {},
-//            dismissButton = {},
-//            modifier = Modifier.padding(16.dp),
-//            buttons = {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(16.dp),
-//                    verticalArrangement = Arrangement.spacedBy(10.dp)
-//                ) {
-//                    Button(
-//                        onClick = {
-//                            showPrintOptions = false
-//                            onPrintBill()
-//                        },
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        Text("🧾 Print Bill")
-//                    }
-//
-//                    Button(
-//                        onClick = {
-//                            showPrintOptions = false
-//                            onPrintKitchen()
-//                        },
-//                        colors = ButtonDefaults.buttonColors(
-//                            containerColor = Color(0xFF4CAF50)
-//                        ),
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        Text("👨‍🍳 Print Kitchen Copy")
-//                    }
-//
-//                    OutlinedButton(
-//                        onClick = { showPrintOptions = false },
-//                        modifier = Modifier.fillMaxWidth()
-//                    ) {
-//                        Text("Cancel")
-//                    }
-//                }
-//            }
-//        )
-//    }
-//}
 
 @Composable
 fun LocalPosOrderTableRow(
     order: PosOrderMasterEntity,
+    currencyCode: String,
+    localeTag: String,
     onOrderClick: () -> Unit,
     onPrintBill: () -> Unit,
     onPrintKitchen: () -> Unit
@@ -369,7 +253,11 @@ fun LocalPosOrderTableRow(
 
         Text(shortType, modifier = Modifier.weight(0.16f))
         Text(
-            text = "₹${"%.2f".format(order.grandTotal)}",
+            text = MoneyFormatter.format(
+                amount = order.grandTotal,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            ),
             modifier = Modifier.weight(0.15f),
             fontWeight = FontWeight.Medium
         )

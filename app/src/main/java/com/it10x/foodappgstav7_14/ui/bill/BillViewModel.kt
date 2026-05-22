@@ -388,7 +388,7 @@ class BillViewModel(
     private fun loadCurrency() {
         viewModelScope.launch {
             val outletInfo = outletRepository.getOutletInfo()
-            _currencySymbol.value = outletInfo.defaultCurrency
+            _currencySymbol.value = outletInfo.currencyCode
         }
     }
 
@@ -798,7 +798,7 @@ class BillViewModel(
                     }
 
                // val (txId, clientId) = fiskalyRepository.startTransaction()
-                //fiscalService = getFiscalService(outlet.country!!, fiskalyRepository)
+                //fiscalService = getFiscalService(outlet.countryName!!, fiskalyRepository)
                 fiscalService = getFiscalService("IN", fiskalyRepository)
                 fiscalContext = withContext(Dispatchers.IO) {
                     fiscalService.start()

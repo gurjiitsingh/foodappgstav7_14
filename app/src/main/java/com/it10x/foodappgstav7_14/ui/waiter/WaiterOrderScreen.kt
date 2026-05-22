@@ -74,7 +74,8 @@ import com.it10x.foodappgstav7_14.ui.waiter.WaiterRightPanel
 import com.it10x.foodappgstav7_14.ui.waiterkitchen.WaiterKitchenScreen
 import com.it10x.foodappgstav7_14.ui.waiterkitchen.WaiterKitchenViewModel
 import com.it10x.foodappgstav7_14.ui.waiterkitchen.WaiterKitchenViewModelFactory
-
+import com.it10x.foodappgstav7_14.data.print.OutletMapper
+import com.it10x.foodappgstav7_14.data.print.OutletInfo
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -231,6 +232,14 @@ fun WaiterPosScreen(
         searchQuery = ""
         // productsViewModel.setSearchQuery("")
         showSearchKeyboard = false
+    }
+
+    var outletSettings by remember {
+        mutableStateOf<com.it10x.foodappgstav7_14.data.pos.entities.config.OutletEntity?>(null)
+    }
+
+    val outletInfo = remember(outletSettings) {
+        OutletMapper.fromEntity(outletSettings)
     }
 
     Column(
@@ -648,6 +657,7 @@ fun WaiterPosScreen(
                         onOpenKitchen = { showKitchen = true },
                         onOpenBill = { showBill = true },
                         isMobile = false,
+                        outletInfo = outletInfo,
                         repository = repository
                     )
 
@@ -744,6 +754,7 @@ fun WaiterPosScreen(
                 onOpenBill = { showBill = true },
                 isMobile = true,
                 onClose = { showCartSheet = false },
+                outletInfo = outletInfo,
                 repository = repository
             )
         }

@@ -19,10 +19,13 @@ import com.it10x.foodappgstav7_14.data.pos.entities.PosOrderItemEntity
 import com.it10x.foodappgstav7_14.data.pos.entities.PosOrderMasterEntity
 import java.text.SimpleDateFormat
 import java.util.*
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 
 @Composable
 fun LocalOrderDetailScreen(
     viewModel: LocalOrderDetailViewModel,
+    currencyCode: String,
+    localeTag: String,
     onBack: () -> Unit
 ) {
     val order by viewModel.orderInfo.collectAsState()
@@ -79,7 +82,11 @@ fun LocalOrderDetailScreen(
 
         // ================= PRODUCTS =================
         items(products, key = { it.id }) { item ->
-            OrderProductRow(item)
+            OrderProductRow(
+                item = item,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            )
             Divider(color = Color(0xFFE0E0E0))
         }
 
@@ -95,6 +102,8 @@ fun LocalOrderDetailScreen(
                 totalPaid = totalPaid,
                 due = due,
                 status = status,
+                currencyCode = currencyCode,
+                localeTag = localeTag,
                 onEditClick = { showEditDialog = true }
             )
         }
@@ -105,6 +114,8 @@ fun LocalOrderDetailScreen(
     if (showEditDialog && order != null) {
         EditGrandTotalDialog(
             currentTotal = order!!.grandTotal,
+            currencyCode = currencyCode,
+            localeTag = localeTag,
             onDismiss = { showEditDialog = false },
             onConfirm = { newTotal ->
                 showEditDialog = false
@@ -115,7 +126,7 @@ fun LocalOrderDetailScreen(
 }
 
 @Composable
-fun OrderProductRow(item: PosOrderItemEntity) {
+fun OrderProductRow(item: PosOrderItemEntity, currencyCode: String, localeTag: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -132,14 +143,27 @@ fun OrderProductRow(item: PosOrderItemEntity) {
 
                 val finalPriceAndModifier = item.finalPricePerItem;
                // Text("${item.quantity} × ₹${"%.2f".format(item.basePrice)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                Text("₹${"%.2f".format(item.basePrice)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-
+                Text(
+                    MoneyFormatter.format(
+                        amount = item.basePrice,
+                        currencyCode = currencyCode,
+                        localeTag = localeTag
+                    ),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray
+                )
                 val modifiers = ModifierJsonHelper.fromJson(item.modifiersJson)
 
                 modifiers.forEach { group ->
                     group.items.forEach { mod ->
                         Text(
-                            text = "  + ${mod.name} (+₹${"%.2f".format(mod.price)})",
+                            text = "  + ${mod.name} (+${
+                                MoneyFormatter.format(
+                                    amount = mod.price,
+                                    currencyCode = currencyCode,
+                                    localeTag = localeTag
+                                )
+                            })",
                             style = MaterialTheme.typography.labelSmall,
                             color = Color(0xFF616161)
                         )
@@ -147,7 +171,15 @@ fun OrderProductRow(item: PosOrderItemEntity) {
                 }
                 Spacer(Modifier.height(2.dp))
                 Text("GST ${item.taxRate}% (${item.taxType})", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                Text("${item.quantity} × ₹${"%.2f".format(finalPriceAndModifier)}")
+                Text(
+                    "${item.quantity} × ${
+                        MoneyFormatter.format(
+                            amount = finalPriceAndModifier,
+                            currencyCode = currencyCode,
+                            localeTag = localeTag
+                        )
+                    }"
+                )
                 if (item.isVariant && !item.parentId.isNullOrEmpty()) {
                     Spacer(Modifier.height(2.dp))
                     Text("Variant item", style = MaterialTheme.typography.labelSmall, color = Color(0xFF616161))
@@ -157,8 +189,24 @@ fun OrderProductRow(item: PosOrderItemEntity) {
             }
 
             Column(horizontalAlignment = Alignment.End) {
-                Text("₹${"%.2f".format(item.finalTotal)}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                Text("₹${"%.2f".format(item.finalPricePerItem)} / item * ${item.quantity}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text(
+                    MoneyFormatter.format(
+                        amount = item.finalTotal,
+                        currencyCode = currencyCode,
+                        localeTag = localeTag
+                    ),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    "${MoneyFormatter.format(
+                        amount = item.finalPricePerItem,
+                        currencyCode = currencyCode,
+                        localeTag = localeTag
+                    )} / item * ${item.quantity}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
             }
         }
     }
@@ -169,6 +217,8 @@ fun OrderProductRow(item: PosOrderItemEntity) {
 @Composable
 fun EditGrandTotalDialog(
     currentTotal: Double,
+    currencyCode: String,
+    localeTag: String,
     onDismiss: () -> Unit,
     onConfirm: (Double) -> Unit
 ) {
@@ -192,7 +242,9 @@ fun EditGrandTotalDialog(
                     value = totalText,
                     onValueChange = { if (it.all { ch -> ch.isDigit() || ch == '.' }) totalText = it },
                     singleLine = true,
-                    label = { Text("New Total (₹)") },
+                    label = {   Text(
+                        "New Total ($currencyCode)"
+                    ) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 Row(
@@ -230,52 +282,117 @@ fun OrderTotals(
     totalPaid: Double,        // <-- new
     due: Double,              // <-- new
     status: String,           // <-- new
+    currencyCode: String,
+    localeTag: String,
     onEditClick: () -> Unit = {}
 ) {
 
     Column {
 
-        TotalRow("Subtotal", subtotal)
-        TotalRow("Tax", tax)
+        TotalRow(
+            label = "Subtotal",
+            value = subtotal,
+            currencyCode = currencyCode,
+            localeTag = localeTag
+        )
 
-        // ✅ NEW: Delivery Fee
+        TotalRow(
+            label = "Tax",
+            value = tax,
+            currencyCode = currencyCode,
+            localeTag = localeTag
+        )
+
+        // ✅ Delivery Fee
         if (deliveryFee > 0) {
-            TotalRow("Delivery Fee", deliveryFee)
+
+            TotalRow(
+                label = "Delivery Fee",
+                value = deliveryFee,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            )
         }
 
-        // ✅ NEW: Delivery Tax
+        // ✅ Delivery Tax
         if (deliveryTax > 0) {
-            TotalRow("Delivery Tax", deliveryTax)
+
+            TotalRow(
+                label = "Delivery Tax",
+                value = deliveryTax,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            )
         }
 
+        // ✅ Discount
         if (discount > 0) {
-            TotalRow("Discount", -discount)
+
+            TotalRow(
+                label = "Discount",
+                value = -discount,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            )
         }
 
+        // ✅ Payment Status
         Text(
             "Payment Status: $status",
             fontWeight = FontWeight.Medium,
             color = when (status) {
+
                 "PAID" -> Color(0xFF2E7D32)
+
                 "PARTIAL" -> Color(0xFFFFA000)
+
                 "CREDIT" -> Color(0xFFD32F2F)
+
                 else -> Color.DarkGray
             },
             modifier = Modifier.padding(vertical = 4.dp)
         )
 
-        Divider(Modifier.padding(vertical = 4.dp))
+        Divider(
+            Modifier.padding(vertical = 4.dp)
+        )
 
+        // ✅ Grand Total
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Grand Total", fontWeight = FontWeight.Bold)
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("₹${"%.2f".format(grandTotal)}", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-                IconButton(onClick = onEditClick, modifier = Modifier.size(22.dp)) {
-                    Icon(Icons.Default.Edit, contentDescription = "Edit Total", tint = Color(0xFFFF9800))
+
+            Text(
+                "Grand Total",
+                fontWeight = FontWeight.Bold
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+
+                Text(
+                    text = MoneyFormatter.format(
+                        amount = grandTotal,
+                        currencyCode = currencyCode,
+                        localeTag = localeTag
+                    ),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp
+                )
+
+                IconButton(
+                    onClick = onEditClick,
+                    modifier = Modifier.size(22.dp)
+                ) {
+
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "Edit Total",
+                        tint = Color(0xFFFF9800)
+                    )
                 }
             }
         }
@@ -284,14 +401,24 @@ fun OrderTotals(
 
 
 @Composable
-fun TotalRow(label: String, value: Double, bold: Boolean = false) {
+fun TotalRow(
+    label: String,
+    value: Double,
+    currencyCode: String,
+    localeTag: String,
+    bold: Boolean = false
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label, fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal)
         Text(
-            "₹${"%.2f".format(value)}",
+            MoneyFormatter.format(
+                amount = value,
+                currencyCode = currencyCode,
+                localeTag = localeTag
+            ),
             fontWeight = if (bold) FontWeight.Bold else FontWeight.Normal
         )
     }

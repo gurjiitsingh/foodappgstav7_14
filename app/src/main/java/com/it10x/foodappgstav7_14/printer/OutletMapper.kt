@@ -22,7 +22,7 @@ object OutletMapper {
                 city = it.city.takeIf { it.isNotBlank() },
                 state = it.state?.takeIf { it.isNotBlank() },
                 zipcode = it.zipcode?.takeIf { it.isNotBlank() },
-                country = it.country?.takeIf { it.isNotBlank() },
+                countryName = it.countryName?.takeIf { it.isNotBlank() },
 
                 taxType = it.taxType?.takeIf { it.isNotBlank() },
                 gstVatNumber = it.gstVatNumber?.takeIf { it.isNotBlank() },
@@ -51,8 +51,14 @@ object OutletMapper {
 
                 isActive = it.isActive,
 
-                defaultCurrency = it.defaultCurrency
-                    ?.takeIf { it.isNotBlank() } ?: "₹",
+                countryCode = it.countryCode
+                    ?.takeIf { code -> code.isNotBlank() } ?: "IN",
+
+                localeTag = it.localeTag
+                    ?.takeIf { locale -> locale.isNotBlank() } ?: "en-IN",
+
+                currencyCode = it.currencyCode
+                    ?.takeIf { code -> code.isNotBlank() } ?: "INR",
 
                 createdAt = it.createdAt,
                 updatedAt = it.updatedAt

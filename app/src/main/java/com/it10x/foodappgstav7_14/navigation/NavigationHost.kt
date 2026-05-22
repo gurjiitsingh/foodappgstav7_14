@@ -100,7 +100,25 @@ fun NavigationHost(
 
     val context = LocalContext.current
     val db = AppDatabaseProvider.get(context)
+    val outletDao = remember {
+        db.outletDao()
+    }
 
+    var currencyCode by remember {
+        mutableStateOf("INR")
+    }
+
+    var localeTag by remember {
+        mutableStateOf("en-IN")
+    }
+
+    LaunchedEffect(Unit) {
+
+        val outlet = outletDao.getOutlet()
+
+        currencyCode = outlet?.currencyCode ?: "INR"
+        localeTag = outlet?.localeTag ?: "en-IN"
+    }
     // -----------------------------
     // SHARED VIEWMODELS
     // -----------------------------
@@ -205,7 +223,8 @@ fun NavigationHost(
     }
 
     LaunchedEffect(Unit) {
-        val outlet = db.outletDao().getOutlet()
+
+        val outlet = outletDao.getOutlet()
 
         startupScreen = outlet?.startupScreen ?: "tables"
     }
@@ -258,23 +277,35 @@ fun NavigationHost(
                 )
             )
 
+
+
+
             LocalOrdersScreen(
-                viewModel = localOrdersViewModel,   // ✅ CORRECT TYPE
-                navController = navController
+                viewModel = localOrdersViewModel,
+                navController = navController,
+                currencyCode = currencyCode,
+                localeTag = localeTag
             )
         }
 
         // ---------------- LOCAL ORDER DETAIL ----------------
+        // ---------------- LOCAL ORDER DETAIL ----------------
         composable(
             route = "local_order_detail/{orderId}",
-            arguments = listOf(navArgument("orderId") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("orderId") {
+                    type = NavType.StringType
+                }
+            )
         ) { backStackEntry ->
 
-            val orderId = backStackEntry.arguments!!.getString("orderId")!!
+            val orderId = backStackEntry.arguments!!
+                .getString("orderId")!!
 
             val ordersRepository = remember {
+
                 POSOrdersRepository(
-                    db = db,                          // ✅ ADD THIS
+                    db = db,
                     orderMasterDao = db.orderMasterDao(),
                     orderProductDao = db.orderProductDao(),
                     cartDao = db.cartDao(),
@@ -291,9 +322,16 @@ fun NavigationHost(
                 )
             )
 
+
+
+
             LocalOrderDetailScreen(
                 viewModel = detailViewModel,
-                onBack = { navController.popBackStack() }
+                onBack = {
+                    navController.popBackStack()
+                },
+                currencyCode = currencyCode,
+                localeTag = localeTag
             )
         }
 
@@ -449,15 +487,21 @@ fun NavigationHost(
             val salesViewModel: SalesViewModel = viewModel(
                 factory = SalesViewModelFactory(
                     salesMasterDao = db.salesMasterDao(),
-                    orderProductDao = db.orderProductDao()   // ✅ added
+                    orderProductDao = db.orderProductDao()
                 )
             )
+
+
+
 
             SalesScreen(
                 viewModel = salesViewModel,
                 onBack = { navController.popBackStack() },
-              //  onHistoryReport = { navController.navigate("category_sales") }
-                onHistoryReport = { navController.navigate("total_sales") }
+                onHistoryReport = {
+                    navController.navigate("total_sales")
+                },
+                currencyCode = currencyCode,
+                localeTag = localeTag
             )
         }
 
@@ -473,7 +517,9 @@ fun NavigationHost(
 
             CategorySalesScreen(
                 navController = navController,
-                viewModel = reportsViewModel
+                viewModel = reportsViewModel,
+                currencyCode = currencyCode,
+                localeTag = localeTag
             )
         }
 
@@ -543,6 +589,8 @@ fun NavigationHost(
                 onHistoryCategoryReport =  { navController.navigate("category_sales") },
                 onHistoryProductReport =  { navController.navigate("products_sales") },
                 onHistoryCategoryProductReport =  { navController.navigate("category_products_sales") },
+                currencyCode = currencyCode,
+                localeTag = localeTag
             )
 
         }

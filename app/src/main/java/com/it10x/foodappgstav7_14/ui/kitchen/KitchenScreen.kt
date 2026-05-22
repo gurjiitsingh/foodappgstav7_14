@@ -17,9 +17,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.it10x.foodappgstav7_14.data.print.OutletInfo
 //import com.it10x.foodappgstav7_14.BuildConfig
 import com.it10x.foodappgstav7_14.ui.cart.CartRow
 import com.it10x.foodappgstav7_14.ui.cart.CartViewModel
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 
 @Composable
 fun KitchenScreen(
@@ -29,6 +31,7 @@ fun KitchenScreen(
     orderType: String,
     kitchenViewModel: KitchenViewModel,
     cartViewModel: CartViewModel,
+    outletInfo: OutletInfo,
     onKitchenEmpty: () -> Unit
 ) {
     val cartItems by cartViewModel.cart.collectAsState(initial = emptyList())
@@ -68,6 +71,25 @@ fun KitchenScreen(
     }
 
     val grandTotal = subTotal + totalTax
+
+
+    val formattedSubTotal = MoneyFormatter.format(
+        amount = subTotal,
+        currencyCode = outletInfo.currencyCode,
+        localeTag = outletInfo.localeTag
+    )
+
+    val formattedTax = MoneyFormatter.format(
+        amount = totalTax,
+        currencyCode = outletInfo.currencyCode,
+        localeTag = outletInfo.localeTag
+    )
+
+    val formattedGrandTotal = MoneyFormatter.format(
+        amount = grandTotal,
+        currencyCode = outletInfo.currencyCode,
+        localeTag = outletInfo.localeTag
+    )
 
     // ---------- Layout ----------
     Row(
@@ -118,12 +140,12 @@ fun KitchenScreen(
                 )
 
                 Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
-                SummaryRow("Subtotal", "₹%.2f".format(subTotal))
-                SummaryRow("Tax", "₹%.2f".format(totalTax))
+                SummaryRow("Subtotal", formattedSubTotal)
+                SummaryRow("Tax", formattedTax)
                 Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f))
                 SummaryRow(
                     "Grand Total",
-                    "₹%.2f".format(grandTotal),
+                    formattedGrandTotal,
                     bold = true,
                     color = MaterialTheme.colorScheme.primary
                 )

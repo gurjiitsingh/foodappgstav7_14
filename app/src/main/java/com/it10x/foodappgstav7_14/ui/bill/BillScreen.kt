@@ -24,7 +24,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 
 // =====================================================
 // DELIVERY ADDRESS UI STATE (UI ONLY)
@@ -43,9 +43,12 @@ data class DeliveryAddressUiState(
 // =====================================================
 // BILL SCREEN
 // =====================================================
+
 @Composable
 fun BillScreen(
     viewModel: BillViewModel,
+    currencyCode: String,
+    localeTag: String,
     onPayClick: (PaymentType) -> Unit
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -180,7 +183,11 @@ fun BillScreen(
 
                         // RIGHT: fixed-width aligned total (keeps alignment for different digits)
                         Text(
-                            text = "$currency${"%,.2f".format(item.itemtotal)}",
+                            text = MoneyFormatter.format(
+                                amount = item.itemtotal,
+                                currencyCode = currencyCode,
+                                localeTag = localeTag
+                            ),
                             modifier = Modifier
                                 .width(90.dp), // fixed width so numbers align
                             textAlign = TextAlign.End
@@ -195,23 +202,33 @@ fun BillScreen(
         Divider()
         Spacer(Modifier.height(6.dp))
 
-        BillRow("Sub Total", state.subtotal, currency)
+        BillRow(
+            label = "Sub Total",
+            value = state.subtotal,
+            currencyCode = currencyCode,
+            localeTag = localeTag
+        )
         if (state.discountApplied > 0) {
-            BillRow("Discount", -state.discountApplied, currency)
+            BillRow("Discount", -state.discountApplied,  currencyCode = currencyCode,
+                localeTag = localeTag)
         }
-        BillRow("Tax", state.tax, currency)
+        BillRow("Tax", state.tax,  currencyCode = currencyCode,
+            localeTag = localeTag)
 
 // ✅ ADD HERE ↓↓↓
         if (state.deliveryFee > 0) {
-            BillRow("Delivery", state.deliveryFee, currency)
+            BillRow("Delivery", state.deliveryFee,  currencyCode = currencyCode,
+                localeTag = localeTag)
         }
 
         if (state.deliveryTax > 0) {
-            BillRow("Delivery Tax (5%)", state.deliveryTax, currency)
+            BillRow("Delivery Tax (5%)", state.deliveryTax,  currencyCode = currencyCode,
+                localeTag = localeTag)
         }
 // ✅ END
 
-        BillRow("Grand Total", state.total, currency, bold = true)
+        BillRow("Grand Total", state.total,  currencyCode = currencyCode,
+            localeTag = localeTag, bold = true)
     }
 
 
@@ -275,15 +292,36 @@ private fun isAddressValid(
 // UI COMPONENTS
 // =====================================================
 @Composable
-private fun BillRow(label: String, value: Double,currency: String, bold: Boolean = false) {
+private fun BillRow(
+    label: String,
+    value: Double,
+    currencyCode: String,
+    localeTag: String,
+    bold: Boolean = false
+) {
+
+    val formattedAmount = remember(value, currencyCode, localeTag) {
+        MoneyFormatter.format(
+            amount = value,
+            currencyCode = currencyCode,
+            localeTag = localeTag
+        )
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
+
         Text(label)
+
         Text(
-            "$currency${"%.2f".format(value)}",
-            fontWeight = if (bold) androidx.compose.ui.text.font.FontWeight.Bold else null
+            text = formattedAmount,
+            fontWeight =
+                if (bold)
+                    androidx.compose.ui.text.font.FontWeight.Bold
+                else
+                    null
         )
     }
 }

@@ -34,6 +34,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.google.gson.Gson
 import com.it10x.foodappgstav7_14.data.pos.models.CartModifier
 import com.it10x.foodappgstav7_14.data.pos.models.CartModifierItem
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 
 
 @Composable
@@ -44,6 +45,8 @@ fun ProductList(
     tableViewModel: PosTableViewModel,
     tableNo: String,
     posSessionViewModel: PosSessionViewModel,
+    currencyCode: String,
+    localeTag: String,
     onProductAdded: () -> Unit
 ) {
 
@@ -78,7 +81,10 @@ fun ProductList(
                 tableViewModel = tableViewModel,
                 tableNo = tableNo,
                 sessionId = sessionId,
-                onProductAdded = onProductAdded
+                currencyCode,
+                localeTag,
+                onProductAdded = onProductAdded,
+
             )
         }
 
@@ -93,6 +99,8 @@ private fun ParentProductCard(
     tableViewModel: PosTableViewModel,
     tableNo: String,
     sessionId: String,
+    currencyCode: String,
+    localeTag: String,
     onProductAdded: () -> Unit
 ) {
 
@@ -196,7 +204,11 @@ private fun ParentProductCard(
             ) {
 
                 Text(
-                    "₹$price",
+                    MoneyFormatter.format(
+                        amount = price,
+                        currencyCode = currencyCode,
+                        localeTag = localeTag
+                    ),
                     color = productText,
                     style = MaterialTheme.typography.bodySmall
                 )

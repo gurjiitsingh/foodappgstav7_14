@@ -211,7 +211,7 @@ fun OutletInfoContainer() {
                 Text("City: ${outlet!!.city ?: ""}")
                 Text("GST: ${outlet!!.gstVatNumber ?: "-"}")
                 Text("Phone: ${outlet!!.phone ?: "-"}")
-                Text("Currency: ${outlet!!.defaultCurrency}")
+                Text("Currency: ${outlet!!.currencyCode}")
             }
         }
     }

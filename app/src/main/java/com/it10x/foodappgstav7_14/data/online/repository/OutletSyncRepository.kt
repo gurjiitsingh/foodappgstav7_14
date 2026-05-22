@@ -50,7 +50,7 @@ class OutletSyncRepository(
             city = data["city"] as? String ?: "",
             state = data["state"] as? String,
             zipcode = data["zipcode"] as? String,
-            country = data["country"] as? String,
+            countryName = data["countryName"] as? String,
 
             // ---------- TAX ----------
             taxType = data["taxType"] as? String,
@@ -80,10 +80,16 @@ class OutletSyncRepository(
             upiName = data["upiName"] as? String,
             upiTitle = data["upiTitle"] as? String,
 
+            // ---------- COUNTRY ----------
+            countryCode = data["countryCode"] as? String ?: "IN",
+
+            currencyCode = data["currencyCode"] as? String ?: "INR",
+
+            localeTag = data["localeTag"] as? String ?: "en-IN",
+
             // ---------- STATUS ----------
             isActive = data["isActive"] as? Boolean ?: true,
             // ---------- NEW: DEFAULT CURRENCY ----------
-            defaultCurrency = data["defaultCurrency"] as? String ?: "₹",
 
             showCategorySidebar =
             data["showCategorySidebar"] as? Boolean ?: true,

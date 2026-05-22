@@ -27,7 +27,7 @@ import com.it10x.foodappgstav7_14.ui.payment.PaymentInput
 import com.it10x.foodappgstav7_14.ui.components.NumPad
 import com.it10x.foodappgstav7_14.utils.MoneyUtils
 import java.util.Locale
-
+import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
 @Composable
 fun BillDialog(
     showBill: Boolean,
@@ -35,6 +35,8 @@ fun BillDialog(
     sessionId: String?,
     tableId: String?,
     orderType: String,
+    localeTag: String,
+    currencyCode: String,
     selectedTableName: String
 ) {
     if (!showBill || sessionId == null) return
@@ -186,7 +188,9 @@ fun BillDialog(
                             )
 
                            // onDismiss()
-                        }
+                        },
+                        currencyCode = currencyCode,
+                        localeTag = localeTag,
                     )
 
 
@@ -475,7 +479,7 @@ fun BillDialog(
                                 OutlinedTextField(
                                     value = deliveryFee.value,
                                     onValueChange = {},
-                                    label = { Text("Delivery ₹") },
+                                    label = { Text("Delivery") },
                                     readOnly = true,
                                     enabled = false,
                                     singleLine = true,
@@ -740,11 +744,11 @@ fun BillDialog(
                     if (showRemainingOptions && remainingPaise > 0) {
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Pay Remaining: ₹${
-                                String.format(
-                                    Locale.getDefault(),
-                                    "%.2f",
-                                    MoneyUtils.fromPaise(remainingPaise)
+                            text = "Pay Remaining: ${
+                                MoneyFormatter.format(
+                                    amount = MoneyUtils.fromPaise(remainingPaise),
+                                    currencyCode = currencyCode,
+                                    localeTag = localeTag
                                 )
                             }",
                             style = MaterialTheme.typography.titleSmall
