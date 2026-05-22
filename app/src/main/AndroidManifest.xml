@@ -48,48 +48,52 @@
         android:usesCleartextTraffic="true"
         android:theme="@style/Theme.foodappgsta">
 
-        <!-- ========================= -->
         <!-- MAIN ACTIVITY -->
-        <!-- ========================= -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
 
-            <!-- Launcher -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- USB Device Attached -->
             <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
             </intent-filter>
 
-            <!-- USB Device Filter -->
             <meta-data
                 android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED"
                 android:resource="@xml/usb_device_filter" />
         </activity>
 
-        <!-- ========================= -->
-        <!-- USB PERMISSION RECEIVER -->
-        <!-- ========================= -->
+        <!-- USB RECEIVER -->
         <receiver
             android:name=".usb.UsbPermissionReceiver"
             android:exported="false">
+
             <intent-filter>
                 <action android:name="com.it10x.foodappgstav7_14.USB_PERMISSION" />
             </intent-filter>
         </receiver>
 
-        <!--  ⭐⭐  ADD THIS BLOCK  ⭐⭐ -->
+        <!-- FOREGROUND SERVICE -->
         <service
             android:name=".service.OrderListenerService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- FILE PROVIDER -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.provider"
+            android:exported="false"
+            android:grantUriPermissions="true">
 
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
     </application>
 </manifest>

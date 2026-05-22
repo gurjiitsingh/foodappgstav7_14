@@ -1,5 +1,6 @@
 package com.it10x.foodappgstav7_14.ui.orders.local
 
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -20,6 +21,13 @@ import com.it10x.foodappgstav7_14.data.pos.viewmodel.POSOrdersViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 import com.it10x.foodappgstav7_14.utils.formatter.MoneyFormatter
+import androidx.compose.material.icons.filled.Send
+import androidx.compose.ui.platform.LocalContext
+import com.it10x.foodappgstav7_14.utils.share.ReceiptImageGenerator
+import com.it10x.foodappgstav7_14.utils.share.ReceiptPdfGenerator
+import com.it10x.foodappgstav7_14.utils.share.ShareUtils
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocalOrdersScreen(
@@ -28,6 +36,7 @@ fun LocalOrdersScreen(
     currencyCode: String,
     localeTag: String
 ){
+    val context = LocalContext.current
     val orders by viewModel.orders.collectAsState()
     val loading by viewModel.loading.collectAsState()
     var selectedDate by remember { mutableStateOf<Long?>(null) }
@@ -36,6 +45,18 @@ fun LocalOrdersScreen(
     val dateFormatter = remember {
         SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
     }
+
+    var selectedOrder by remember {
+        mutableStateOf<PosOrderMasterEntity?>(null)
+    }
+    var selectedMimeType by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    var selectedUri by remember {
+        mutableStateOf<Uri?>(null)
+    }
+
     LaunchedEffect(Unit) {
         viewModel.loadFirstPage()
     }
@@ -122,13 +143,18 @@ fun LocalOrdersScreen(
                                 navController.navigate("local_order_detail/${order.id}")
                             },
                             onPrintBill = {
-                                viewModel.printOrder(order.id, role= "bill")
+                                viewModel.printOrder(order.id, role = "bill")
                             },
                             onPrintKitchen = {
-                                viewModel.printOrder(order.id, role= "kitchen")
+                                viewModel.printOrder(order.id, role = "kitchen")
+                            },
+                            onShareWhatsApp = {
+                                selectedOrder = order
                             }
                         )
                     }
+
+
                 }
 
 
@@ -190,6 +216,169 @@ fun LocalOrdersScreen(
             DatePicker(state = datePickerState)
         }
     }
+
+
+    selectedOrder?.let { order ->
+
+        AlertDialog(
+            onDismissRequest = {
+                selectedOrder = null
+            },
+
+            title = {
+                Text("Share Receipt")
+            },
+
+            text = {
+                Text("Choose receipt format")
+            },
+
+            confirmButton = {
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+
+                    Button(
+                        onClick = {
+
+                            val imageUri =
+                                ReceiptImageGenerator.generateReceiptImage(
+                                    context = context,
+                                    order = order
+                                )
+
+                            selectedUri = imageUri
+                            selectedMimeType = "image/png"
+
+                            selectedOrder = null
+                        }
+                    ) {
+                        Text("Image")
+                    }
+
+                    Button(
+                        onClick = {
+
+                            val pdfUri =
+                                ReceiptPdfGenerator.generatePdf(
+                                    context = context,
+                                    order = order
+                                )
+
+                            selectedUri = pdfUri
+                            selectedMimeType = "application/pdf"
+
+                            selectedOrder = null
+                        }
+                    ) {
+                        Text("PDF")
+                    }
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedOrder = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+
+    selectedUri?.let { uri ->
+
+        AlertDialog(
+            onDismissRequest = {
+                selectedUri = null
+            },
+
+            title = {
+                Text("Share Via")
+            },
+
+            text = {
+                Text("Choose app")
+            },
+
+            confirmButton = {
+
+                Column {
+
+                    Button(
+                        onClick = {
+
+                            ShareUtils.shareToWhatsApp(
+                                context = context,
+                                uri = uri,
+                                mimeType = selectedMimeType!!
+                            )
+
+                            selectedUri = null
+                        }
+                    ) {
+                        Text("WhatsApp")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+
+                            val message = """
+                            Order #${selectedOrder?.srno}
+                            Total: ₹${selectedOrder?.grandTotal}
+
+                            Thank you for your order.
+                        """.trimIndent()
+
+                            ShareUtils.shareSms(
+                                context = context,
+                                message = message
+                            )
+
+                            selectedUri = null
+                        }
+                    ) {
+                        Text("SMS")
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    Button(
+                        onClick = {
+
+                            ShareUtils.shareFile(
+                                context = context,
+                                uri = uri,
+                                mimeType = selectedMimeType!!
+                            )
+
+                            selectedUri = null
+                        }
+                    ) {
+                        Text("Other Apps")
+                    }
+                }
+            },
+
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        selectedUri = null
+                    }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+
 }
 
 
@@ -230,7 +419,8 @@ fun LocalPosOrderTableRow(
     localeTag: String,
     onOrderClick: () -> Unit,
     onPrintBill: () -> Unit,
-    onPrintKitchen: () -> Unit
+    onPrintKitchen: () -> Unit,
+    onShareWhatsApp: () -> Unit
 ) {
 
 
@@ -291,11 +481,12 @@ fun LocalPosOrderTableRow(
             modifier = Modifier.weight(0.12f),
             horizontalArrangement = Arrangement.spacedBy(4.dp)
         ) {
+
             IconButton(onClick = onPrintBill) {
                 Icon(
                     imageVector = Icons.Filled.Print,
                     contentDescription = "Print Bill",
-                    tint = MaterialTheme.colorScheme.primary // blue for bill
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -303,7 +494,15 @@ fun LocalPosOrderTableRow(
                 Icon(
                     imageVector = Icons.Filled.Print,
                     contentDescription = "Print Kitchen",
-                    tint = Color(0xFF4CAF50) // green for kitchen
+                    tint = Color(0xFF4CAF50)
+                )
+            }
+
+            IconButton(onClick = onShareWhatsApp) {
+                Icon(
+                    imageVector = Icons.Filled.Send,
+                    contentDescription = "Share WhatsApp",
+                    tint = Color(0xFF25D366)
                 )
             }
         }
