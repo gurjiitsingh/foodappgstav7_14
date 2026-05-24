@@ -46,6 +46,12 @@ class POSOrdersViewModel(
     private val _orders = MutableStateFlow<List<PosOrderMasterEntity>>(emptyList())
     val orders: StateFlow<List<PosOrderMasterEntity>> = _orders
 
+    suspend fun getOrderItems(
+        orderId: String
+    ): List<PosOrderItemEntity> {
+
+        return repository.getOrderItems(orderId)
+    }
     fun searchOrdersByDate(dateMillis: Long) {
 
         val startOfDay = dateMillis

@@ -86,6 +86,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.LaunchedEffect
+import com.it10x.foodappgstav7_14.data.pos.entities.config.OutletEntity
 
 @Composable
 fun NavigationHost(
@@ -104,6 +105,10 @@ fun NavigationHost(
         db.outletDao()
     }
 
+    var outlet by remember {
+        mutableStateOf<OutletEntity?>(null)
+    }
+
     var currencyCode by remember {
         mutableStateOf("INR")
     }
@@ -118,6 +123,10 @@ fun NavigationHost(
 
         currencyCode = outlet?.currencyCode ?: "INR"
         localeTag = outlet?.localeTag ?: "en-IN"
+    }
+
+    LaunchedEffect(Unit) {
+        outlet = outletDao.getOutlet()
     }
     // -----------------------------
     // SHARED VIEWMODELS
@@ -277,14 +286,10 @@ fun NavigationHost(
                 )
             )
 
-
-
-
             LocalOrdersScreen(
                 viewModel = localOrdersViewModel,
                 navController = navController,
-                currencyCode = currencyCode,
-                localeTag = localeTag
+                outlet = outlet
             )
         }
 

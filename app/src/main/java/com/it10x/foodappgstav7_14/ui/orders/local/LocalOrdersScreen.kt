@@ -26,17 +26,19 @@ import androidx.compose.ui.platform.LocalContext
 import com.it10x.foodappgstav7_14.utils.share.ReceiptImageGenerator
 import com.it10x.foodappgstav7_14.utils.share.ReceiptPdfGenerator
 import com.it10x.foodappgstav7_14.utils.share.ShareUtils
-
+import androidx.compose.runtime.rememberCoroutineScope
+import com.it10x.foodappgstav7_14.data.pos.entities.config.OutletEntity
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LocalOrdersScreen(
     viewModel: POSOrdersViewModel,
     navController: NavController,
-    currencyCode: String,
-    localeTag: String
+    outlet: OutletEntity?
 ){
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val orders by viewModel.orders.collectAsState()
     val loading by viewModel.loading.collectAsState()
     var selectedDate by remember { mutableStateOf<Long?>(null) }
@@ -56,6 +58,12 @@ fun LocalOrdersScreen(
     var selectedUri by remember {
         mutableStateOf<Uri?>(null)
     }
+
+    val currencyCode =
+        outlet?.currencyCode ?: "INR"
+
+    val localeTag =
+        outlet?.localeTag ?: "en-IN"
 
     LaunchedEffect(Unit) {
         viewModel.loadFirstPage()
@@ -242,16 +250,24 @@ fun LocalOrdersScreen(
                     Button(
                         onClick = {
 
-                            val imageUri =
-                                ReceiptImageGenerator.generateReceiptImage(
-                                    context = context,
-                                    order = order
-                                )
+                            coroutineScope.launch {
 
-                            selectedUri = imageUri
-                            selectedMimeType = "image/png"
+                                val orderItems =
+                                    viewModel.getOrderItems(order.id)
 
-                            selectedOrder = null
+                                val imageUri =
+                                    ReceiptImageGenerator.generateReceiptImage(
+                                        context = context,
+                                        order = order,
+                                        items = orderItems,
+                                        outlet = outlet
+                                    )
+
+                                selectedUri = imageUri
+                                selectedMimeType = "image/png"
+
+                                selectedOrder = null
+                            }
                         }
                     ) {
                         Text("Image")
@@ -260,16 +276,24 @@ fun LocalOrdersScreen(
                     Button(
                         onClick = {
 
-                            val pdfUri =
-                                ReceiptPdfGenerator.generatePdf(
-                                    context = context,
-                                    order = order
-                                )
+                            coroutineScope.launch {
 
-                            selectedUri = pdfUri
-                            selectedMimeType = "application/pdf"
+                                val orderItems =
+                                    viewModel.getOrderItems(order.id)
 
-                            selectedOrder = null
+                                val pdfUri =
+                                    ReceiptPdfGenerator.generatePdf(
+                                        context = context,
+                                        order = order,
+                                        items = orderItems,
+                                        outlet = outlet
+                                    )
+
+                                selectedUri = pdfUri
+                                selectedMimeType = "application/pdf"
+
+                                selectedOrder = null
+                            }
                         }
                     ) {
                         Text("PDF")
@@ -326,26 +350,64 @@ fun LocalOrdersScreen(
 
                     Spacer(Modifier.height(8.dp))
 
-                    Button(
-                        onClick = {
-
-                            val message = """
-                            Order #${selectedOrder?.srno}
-                            Total: ₹${selectedOrder?.grandTotal}
-
-                            Thank you for your order.
-                        """.trimIndent()
-
-                            ShareUtils.shareSms(
-                                context = context,
-                                message = message
-                            )
-
-                            selectedUri = null
-                        }
-                    ) {
-                        Text("SMS")
-                    }
+//                    Button(
+//                        onClick = {
+//
+//                            val sdf = SimpleDateFormat(
+//                                "dd MMM yyyy hh:mm a",
+//                                Locale.getDefault()
+//                            )
+//
+//                            val message = buildString {
+//
+//                                appendLine("Order Receipt")
+//                                appendLine("Order #: ${selectedOrder?.srno}")
+//
+//                                appendLine(
+//                                    "Date: ${
+//                                        selectedOrder?.createdAt?.let {
+//                                            sdf.format(Date(it))
+//                                        }
+//                                    }"
+//                                )
+//
+//                                appendLine(
+//                                    "Type: ${selectedOrder?.orderType}"
+//                                )
+//
+//                                appendLine(
+//                                    "Payment: ${selectedOrder?.paymentMode}"
+//                                )
+//
+//                                appendLine(
+//                                    "Total: ₹${"%.2f".format(selectedOrder?.grandTotal ?: 0.0)}"
+//                                )
+//
+//                                if (!outlet?.outletName.isNullOrBlank()) {
+//
+//                                    appendLine()
+//                                    appendLine(outlet?.outletName)
+//                                }
+//
+//                                if (!outlet?.phone.isNullOrBlank()) {
+//
+//                                    appendLine("Ph: ${outlet?.phone}")
+//                                }
+//
+//                                appendLine()
+//                                append("Thank you for your order.")
+//                            }
+//
+//                            ShareUtils.shareSms(
+//                                context = context,
+//                                message = message
+//                            )
+//
+//                            selectedUri = null
+//                        }
+//                    ) {
+//                        Text("SMS")
+//                    }
 
                     Spacer(Modifier.height(8.dp))
 
@@ -396,7 +458,7 @@ fun LocalPosOrderTableHeader() {
        // HeaderCell("Payment", 0.18f)
      //   HeaderCell("Status", 0.18f)
         HeaderCell("Time", 0.16f)
-        HeaderCell("Bill Kitchen", 0.16f)
+        HeaderCell("Bill", 0.16f)
     }
 }
 
@@ -490,13 +552,13 @@ fun LocalPosOrderTableRow(
                 )
             }
 
-            IconButton(onClick = onPrintKitchen) {
-                Icon(
-                    imageVector = Icons.Filled.Print,
-                    contentDescription = "Print Kitchen",
-                    tint = Color(0xFF4CAF50)
-                )
-            }
+//            IconButton(onClick = onPrintKitchen) {
+//                Icon(
+//                    imageVector = Icons.Filled.Print,
+//                    contentDescription = "Print Kitchen",
+//                    tint = Color(0xFF4CAF50)
+//                )
+//            }
 
             IconButton(onClick = onShareWhatsApp) {
                 Icon(
